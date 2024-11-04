@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 6 last warriors</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), 
+                        url('https://images.unsplash.com/photo-1518783225812-d70efbd0faa7') center/cover;
+            font-family: 'Gothic', serif;
+        }
+
+        .title-container {
+            text-align: center;
+            color: #d4b16a;
+            text-shadow: 2px 2px 4px rgba(210, 162, 18, 0.884);
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: flicker 3s infinite;
+        }
+
+        .start-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: transparent;
+            border: 2px solid #d4b16a;
+            color: #d4b16a;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            background-color: #d4b16a;
+            color: #000;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .menu-btn {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            background-color: transparent;
+            border: 2px solid #d4b16a;
+            color: #d4b16a;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 200px;
+            margin: 0 auto;
+        }
+
+        .menu-btn:hover {
+            background-color: #d4b16a;
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        /* Estilos para el modal de configuraciones */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            margin: 15% auto;
+            padding: 20px;
+            border: 2px solid #d4b16a;
+            width: 80%;
+            max-width: 500px;
+            color: #d4b16a;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 10px;
+            top: 5px;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-container">
+        <h1>The 6 last warriors</h1>
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="startGame()">Begin the adventure</button>
+            <button class="menu-btn" onclick="openSettings()">Configurations</button>
+            <button class="menu-btn" onclick="openAchievements()">Achievements</button>
+            <button class="menu-btn" onclick="exitGame()">Exit</button>
+        </div>
+    </div>
+
+    <!-- Modal de Configuraciones -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+            <h2>Configuraciones</h2>
+            <div>
+                <label>Volumen Música: </label>
+                <input type="range" min="0" max="100" value="50">
+            </div>
+            <div>
+                <label>Volumen Efectos: </label>
+                <input type="range" min="0" max="100" value="50">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Logros -->
+    <div id="achievementsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('achievementsModal')">&times;</span>
+            <h2>Logros</h2>
+            <div>
+                <p>🔒 Novato - Aniquila 10 enemigos</p>
+                <p>🔒  - Descubre todos los secretos</p>
+                <p>🔒 Coleccionista - Encuentra 10 objetos antiguos</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startGame() {
+            // Aquí puedes agregar la lógica para iniciar el juego
+            console.log("Iniciando juego...");
+            // window.location.href = "game.html";
+            window.location.href = "characterselect.html"; // Redirige a la página de selección de personaje cuando se presiona el botón
+        }
+
+        function openSettings() {
+            document.getElementById("settingsModal").style.display = "block";
+        }
+
+        function openAchievements() {
+            document.getElementById("achievementsModal").style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        function exitGame() {
+            if(confirm("¿Estás seguro que deseas salir del juego?")) {
+                window.close();
+                // Como alternativa si window.close() no funciona:
+                // window.location.href = "https://tu-página-de-salida.com";
+            }
+        }
+
+        // Cerrar modales al hacer clic fuera de ellos
+        window.onclick = function(event) {
+            if (event.target.className === "modal") {
+                event.target.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

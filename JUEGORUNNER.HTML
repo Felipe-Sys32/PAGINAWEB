@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Runner Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas {
+            border: 4px solid #30475e;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #87CEEB, #e0e0e0);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        #gameStats {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 30px;
+            border-radius: 20px;
+            margin: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 18px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .stat-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            color: #ffd700;
+        }
+
+        #btnTienda {
+            padding: 12px 25px;
+            margin: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #btnTienda:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .menu-pausa {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2a2a3a, #1a1a2e);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            min-width: 300px;
+        }
+
+        .menu-pausa h2 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .tienda-item {
+            margin: 15px 0;
+            padding: 15px;
+            border: 2px solid #30475e;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tienda-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .tienda-item .precio {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .bloqueado {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-volver {
+            background: linear-gradient(45deg, #ff4757, #ff6b81);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-volver:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .power-up-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        /* Estilos para el botón de salto */
+        #jumpButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: block;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            z-index: 1000;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #jumpButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        #jumpButton:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        /* Media queries para hacer el juego responsive */
+        @media (max-width: 850px) {
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+
+            #jumpButton {
+                width: 70px;
+                height: 70px;
+                font-size: 20px;
+            }
+
+            #gameStats {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+
+            .menu-pausa {
+                width: 90%;
+                max-width: 300px;
+            }
+
+            .tienda-item {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+
+        /* Prevenir zoom en móviles al tocar dos veces */
+        @media (max-width: 850px) {
+            body {
+                touch-action: pan-x pan-y;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <div id="gameStats">
+            <div class="stat-container">
+                <span class="stat-icon">🏆</span>
+                Puntuación: <span id="score">0</span>
+            </div>
+            <div class="stat-container">
+                <span class="stat-icon">💰</span>
+                Monedas: <span id="coins">0</span>
+            </div>
+        </div>
+        <button id="btnTienda" onclick="pausarJuego()">🛍️ Abrir Tienda</button>
+    </div>
+
+    <div class="menu-pausa" id="menuPausa">
+        <h2>🏪 Tienda de Mejoras</h2>
+        <div class="tienda-item" onclick="comprarEfecto('saltoRainbow')" id="efectoSaltoRainbow">
+            <span>🌈 Efecto Salto Arcoíris</span>
+            <span class="precio">500 pts</span>
+        </div>
+        <div class="tienda-item" onclick="comprarEfecto('muerteExplosion')" id="efectoMuerteExplosion">
+            <span>💥 Efecto Muerte Explosiva</span>
+            <span class="precio">1000 pts</span>
+        </div>
+        <div class="tienda-item" onclick="comprarEfecto('saltoDoble')" id="efectoSaltoDoble">
+            <span>🦘 Salto Doble</span>
+            <span class="precio">1500 pts</span>
+        </div>
+        <button class="btn-volver" onclick="reanudarJuego()">Volver al juego</button>
+    </div>
+
+    <div class="power-up-indicator" id="powerUpIndicator">
+        ⚡ Power-up Activo!
+    </div>
+
+    <button id="jumpButton">↑</button>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <script>
+        // 1. Primero declaramos todas las variables globales
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let pausado = false;
+        let efectosComprados = {
+            saltoRainbow: false,
+            muerteExplosion: false,
+            saltoDoble: false
+        };
+        let particulas = [];
+        let saltosDisponibles = 1;
+        let frameCount = 0;
+        let obstacles = [];
+        let powerUps = [];
+
+        // 2. Configuración del jugador
+        const player = {
+            x: 50,
+            y: canvas.height - 80,
+            width: 30,
+            height: 60,
+            jumping: false,
+            jumpForce: 15,
+            velocity: 0,
+            gravity: 0.8,
+            speed: 5,
+            coins: 0,
+            score: 0
+        };
+
+        // 3. Definición de la clase Particula
+        class Particula {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocityX = (Math.random() - 0.5) * 8;
+                this.velocityY = (Math.random() - 0.5) * 8;
+                this.vida = 1;
+                this.decay = Math.random() * 0.02 + 0.02;
+            }
+
+            actualizar() {
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                this.vida -= this.decay;
+            }
+
+            dibujar(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5 * this.vida, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        // 4. Funciones del juego
+        function drawPlayer() {
+            frameCount++;
+            
+            if (player.jumping && efectosComprados.saltoRainbow) {
+                const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#8F00FF'];
+                const colorIndex = Math.floor(frameCount / 5) % colors.length;
+                ctx.fillStyle = colors[colorIndex];
+                
+                if (frameCount % 3 === 0) {
+                    particulas.push(new Particula(
+                        player.x + player.width / 2,
+                        player.y + player.height,
+                        colors[Math.floor(Math.random() * colors.length)]
+                    ));
+                }
+            } else {
+                ctx.fillStyle = '#333';
+            }
+
+            let breathingOffset = Math.sin(frameCount * 0.05) * 2;
+            
+            ctx.fillRect(player.x, player.y + breathingOffset, player.width, player.height);
+            
+            ctx.beginPath();
+            ctx.arc(player.x + player.width/2, player.y - 10 + breathingOffset, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            particulas = particulas.filter(p => p.vida > 0);
+            particulas.forEach(p => {
+                p.actualizar();
+                p.dibujar(ctx);
+            });
+        }
+
+        function createObstacle() {
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - 60,
+                width: 30,
+                height: 40
+            });
+        }
+
+        function createPowerUp() {
+            powerUps.push({
+                x: canvas.width,
+                y: canvas.height - 100,
+                width: 20,
+                height: 20,
+                type: Math.random() < 0.5 ? 'jump' : 'speed'
+            });
+        }
+
+        function update() {
+            if (player.jumping) {
+                player.velocity += player.gravity;
+                player.y += player.velocity;
+
+                if (player.y > canvas.height - 80) {
+                    player.y = canvas.height - 80;
+                    player.jumping = false;
+                    player.velocity = 0;
+                    saltosDisponibles = efectosComprados.saltoDoble ? 2 : 1;
+                }
+            }
+
+            obstacles.forEach((obstacle, index) => {
+                obstacle.x -= player.speed;
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(index, 1);
+                    player.score += 10;
+                }
+            });
+
+            powerUps.forEach((powerUp, index) => {
+                powerUp.x -= player.speed;
+                if (powerUp.x + powerUp.width < 0) {
+                    powerUps.splice(index, 1);
+                }
+            });
+
+            checkCollisions();
+
+            if (player.y === canvas.height - 100) {
+                saltosDisponibles = efectosComprados.saltoDoble ? 2 : 1;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#666';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+            
+            drawPlayer();
+
+            ctx.fillStyle = '#f00';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+
+            powerUps.forEach(powerUp => {
+                ctx.fillStyle = powerUp.type === 'jump' ? '#0f0' : '#00f';
+                ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+            });
+        }
+
+        // 5. Event Listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (!player.jumping || (efectosComprados.saltoDoble && saltosDisponibles > 0)) {
+                    player.jumping = true;
+                    player.velocity = -player.jumpForce;
+                    saltosDisponibles--;
+                }
+            } else if (e.code === 'Escape') {
+                if (pausado) {
+                    reanudarJuego();
+                } else {
+                    pausarJuego();
+                }
+            }
+        });
+
+        // 6. Iniciar el juego
+        setInterval(createObstacle, 2000);
+        setInterval(createPowerUp, 5000);
+
+        function gameLoop() {
+            if (!pausado) {
+                update();
+                draw();
+                document.getElementById('score').textContent = player.score;
+                document.getElementById('coins').textContent = player.coins;
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        // Verificar colisiones
+        function checkCollisions() {
+            // Colisión con obstáculos
+            obstacles.forEach(obstacle => {
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    gameOver();
+                }
+            });
+
+            // Colisión con power-ups
+            powerUps.forEach((powerUp, index) => {
+                if (player.x < powerUp.x + powerUp.width &&
+                    player.x + player.width > powerUp.x &&
+                    player.y < powerUp.y + powerUp.height &&
+                    player.y + player.height > powerUp.y) {
+                    applyPowerUp(powerUp.type);
+                    powerUps.splice(index, 1);
+                }
+            });
+        }
+
+        // Aplicar power-ups
+        function applyPowerUp(type) {
+            if (type === 'jump') {
+                player.jumpForce = 20;
+                mostrarPowerUpIndicator('jump');
+                setTimeout(() => player.jumpForce = 15, 5000);
+            } else if (type === 'speed') {
+                player.speed += 2;
+                mostrarPowerUpIndicator('speed');
+                setTimeout(() => player.speed -= 2, 5000);
+            }
+        }
+
+        // Game Over
+        function gameOver() {
+            if (efectosComprados.muerteExplosion) {
+                // Crear explosión de partículas
+                for (let i = 0; i < 50; i++) {
+                    particulas.push(new Particula(
+                        player.x + player.width / 2,
+                        player.y + player.height / 2,
+                        `hsl(${Math.random() * 360}, 100%, 50%)`
+                    ));
+                }
+                
+                // Esperar a que termine la animación
+                setTimeout(() => {
+                    alert('¡Juego terminado! Puntuación: ' + player.score);
+                    location.reload();
+                }, 1000);
+            } else {
+                alert('¡Juego terminado! Puntuación: ' + player.score);
+                location.reload();
+            }
+        }
+
+        // Funciones para la tienda y pausa
+        function pausarJuego() {
+            pausado = true;
+            document.getElementById('menuPausa').style.display = 'block';
+            document.getElementById('btnTienda').style.display = 'none';
+        }
+
+        function reanudarJuego() {
+            pausado = false;
+            document.getElementById('menuPausa').style.display = 'none';
+            document.getElementById('btnTienda').style.display = 'block';
+        }
+
+        function comprarEfecto(efecto) {
+            const precios = {
+                saltoRainbow: 500,
+                muerteExplosion: 1000,
+                saltoDoble: 1500
+            };
+
+            if (player.score >= precios[efecto] && !efectosComprados[efecto]) {
+                efectosComprados[efecto] = true;
+                player.score -= precios[efecto];
+                const elemento = document.getElementById(`efecto${efecto.charAt(0).toUpperCase() + efecto.slice(1)}`);
+                elemento.style.background = 'rgba(76, 175, 80, 0.2)';
+                elemento.innerHTML += ' ✅';
+                
+                if (efecto === 'saltoDoble') {
+                    saltosDisponibles = 2;
+                }
+            }
+        }
+
+        // Añade estas funciones para efectos visuales
+
+        function mostrarPowerUpIndicator(tipo) {
+            const indicator = document.getElementById('powerUpIndicator');
+            indicator.style.display = 'block';
+            indicator.textContent = tipo === 'jump' ? '🦘 Super Salto!' : '⚡ Super Velocidad!';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 5000);
+        }
+
+        // Añade estas funciones para el control táctil
+        function handleJump() {
+            if (!player.jumping || (efectosComprados.saltoDoble && saltosDisponibles > 0)) {
+                player.jumping = true;
+                player.velocity = -player.jumpForce;
+                saltosDisponibles--;
+            }
+        }
+
+        // Modifica los event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener para el botón de salto
+            const jumpButton = document.getElementById('jumpButton');
+            
+            // Manejar click/touch en el botón de salto
+            jumpButton.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                handleJump();
+            });
+            
+            jumpButton.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                handleJump();
+            });
+
+            // Mantener el listener del teclado para PC
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    handleJump();
+                } else if (e.code === 'Escape') {
+                    if (pausado) {
+                        reanudarJuego();
+                    } else {
+                        pausarJuego();
+                    }
+                }
+            });
+
+            // Prevenir el comportamiento por defecto del espacio
+            document.addEventListener('keydown', function(e) {
+                if(e.code === 'Space') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Añade esta función para ajustar el tamaño del canvas
+        function resizeCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            const container = document.getElementById('gameContainer');
+            const originalWidth = 800;
+            const originalHeight = 400;
+            
+            if (window.innerWidth < 850) {
+                const newWidth = container.clientWidth;
+                const scale = newWidth / originalWidth;
+                canvas.style.width = newWidth + 'px';
+                canvas.style.height = (originalHeight * scale) + 'px';
+            } else {
+                canvas.style.width = originalWidth + 'px';
+                canvas.style.height = originalHeight + 'px';
+            }
+        }
+
+        // Añade los event listeners para el resize
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose your character</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+                        url('https://images.unsplash.com/photo-1518783225812-d70efbd0faa7') center/cover;
+            font-family: 'Gothic', serif;
+            color: #d4b16a;
+        }
+
+        .character-select-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 40px;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .character-card {
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #d4b16a;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .character-card:hover {
+            transform: scale(1.05);
+            background: rgba(212,177,106,0.2);
+        }
+
+        .character-image {
+            width: 150px;
+            height: 150px;
+            background: #2a2a2a;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+        }
+
+        .character-stats {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .selected {
+            background: rgba(212,177,106,0.3);
+            transform: scale(1.05);
+        }
+
+        .confirm-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: transparent;
+            border: 2px solid #d4b16a;
+            color: #d4b16a;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .confirm-btn:hover {
+            background-color: #d4b16a;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="character-select-container">
+        <h1>Elige tu Personaje</h1>
+        <div class="characters-grid">
+            <div class="character-card" onclick="selectCharacter(0)">
+                <div class="character-image"></div>
+                <h3>Samsom</h3>
+                <p>The last warrior</p>
+                <div class="character-stats">
+                    <p>Speed: ⭐⭐⭐</p>
+                    <p>Damage: ⭐⭐⭐⭐</p>
+                </div>
+            </div>
+            <div class="character-card" onclick="selectCharacter(1)">
+                <div class="character-image"></div>
+                <h3>Lilith</h3>
+                <p>She can see spirits and use magic</p>
+                <div class="character-stats">
+                    <p>Speed: ⭐⭐</p>
+                    <p>Magic Power: ⭐⭐⭐⭐⭐</p>
+                </div>
+            </div>
+            <div class="character-card" onclick="selectCharacter(2)">
+                <div class="character-image"></div>
+                <h3>Moon</h3>
+                <p>She can find hidden clues</p>
+                <div class="character-stats">
+                    <p>Velocidad: ⭐⭐⭐</p>
+                    <p>Intuición: ⭐⭐⭐⭐</p>
+                </div>
+            </div>
+            <div class="character-card" onclick="selectCharacter(3)">
+                <div class="character-image"></div>
+                <h3>Mary</h3>
+                <p>She is an expert in survival</p>
+                <div class="character-stats">
+                    <p>Velocidad: ⭐⭐⭐⭐⭐</p>
+                    <p>Resistencia: ⭐⭐⭐</p>
+                </div>
+            </div>
+            <div class="character-card" onclick="selectCharacter(4)">
+                <div class="character-image"></div>
+                <h3>Azazel</h3>
+                <p>He is a master of dark arts</p>
+                <div class="character-stats">
+                    <p>Dark Power: ⭐⭐⭐⭐⭐</p>
+                    <p>Speed: ⭐⭐</p>
+                </div>
+            </div>
+            <div class="character-card" onclick="selectCharacter(5)">
+                <div class="character-image"></div>
+                <h3>Milly</h3>
+                <p>She can create useful gadgets</p>
+                <div class="character-stats">
+                    <p>Technology: ⭐⭐⭐⭐</p>
+                    <p>Speed: ⭐⭐⭐</p>
+                </div>
+            </div>
+        </div>
+        <button class="confirm-btn" onclick="startGame()">Confirm</button>
+    </div>
+
+    <script>
+        let selectedCharacter = null;
+
+        function selectCharacter(index) {
+            // Remover selección previa
+            const cards = document.querySelectorAll('.character-card');
+            cards.forEach(card => card.classList.remove('selected'));
+            
+            // Seleccionar nuevo personaje
+            cards[index].classList.add('selected');
+            selectedCharacter = index;
+        }
+
+        function startGame() {
+            if (selectedCharacter === null) {
+                alert('Por favor, selecciona un personaje');
+                return;
+            }
+            // Guardar el personaje seleccionado
+            localStorage.setItem('selectedCharacter', selectedCharacter);
+            // Ir al juego
+            window.location.href = 'game.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let the adventure begin!</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #2a2a2a;
+        }
+        #gameCanvas {
+            background: repeating-linear-gradient(
+                45deg,
+                #884707,
+                #884707 10px,
+                #693506 10px,
+                #693506 20px
+            );
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Player {
+            constructor(character) {
+                this.x = canvas.width / 2;
+                this.y = canvas.height / 2;
+                this.speed = this.getCharacterSpeed(character);
+                this.size = 40;
+                this.character = character;
+                this.projectiles = [];
+                this.direction = 'down';
+                this.animationFrame = 0;
+                this.moving = false;
+                this.health = 100;
+                this.invulnerable = false;
+                this.invulnerableTime = 0;
+                this.lastVoiceLine = 0;
+                this.voiceCooldowns = {
+                    damage: 0,
+                    kill: 0,
+                    special: 0
+                };
+                this.killCount = 0;
+                this.lastKillTime = 0;
+                this.killStreak = 0;
+            }
+
+            getCharacterSpeed(character) {
+                const speeds = {
+                    0: 5,  // Cazador
+                    1: 3,  // Médium
+                    2: 4,  // Detective
+                    3: 6,  // Exploradora
+                    4: 3,  // Ocultista
+                    5: 4   // Inventora
+                };
+                return speeds[character];
+            }
+
+            getCharacterColor(character) {
+                const colors = {
+                    0: '#ff4444',  // Cazador - Rojo
+                    1: '#9944ff',  // Médium - Púrpura
+                    2: '#44ff44',  // Detective - Verde
+                    3: '#ffff44',  // Exploradora - Amarillo
+                    4: '#660066',  // Ocultista - Morado oscuro
+                    5: '#44ffff'   // Inventora - Cian
+                };
+                return colors[character];
+            }
+
+            draw() {
+                if (this.invulnerable && Math.floor(this.invulnerableTime/5) % 2 === 0) {
+                    return; // Parpadeo cuando está invulnerable
+                }
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Dibujar el personaje según su tipo
+                switch(this.character) {
+                    case 0: // Cazador
+                        this.drawHunter();
+                        break;
+                    case 1: // Médium
+                        this.drawMedium();
+                        break;
+                    case 2: // Detective
+                        this.drawDetective();
+                        break;
+                    case 3: // Exploradora
+                        this.drawExplorer();
+                        break;
+                    case 4: // Ocultista
+                        this.drawOccultist();
+                        break;
+                    case 5: // Inventora
+                        this.drawInventor();
+                        break;
+                }
+
+                ctx.restore();
+            }
+
+            drawHunter() {
+                ctx.save();
+                // Efecto de sombra general
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 10;
+
+                // Capa con animación
+                ctx.fillStyle = '#992222';
+                ctx.beginPath();
+                ctx.moveTo(-25, -15);
+                ctx.quadraticCurveTo(0, -10 + Math.sin(this.animationFrame) * 5, 25, -15);
+                ctx.lineTo(15 + Math.sin(this.animationFrame) * 3, 25);
+                ctx.lineTo(-15 + Math.sin(this.animationFrame) * 3, 25);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cuerpo con gradiente
+                const bodyGradient = ctx.createLinearGradient(-20, -20, 20, 20);
+                bodyGradient.addColorStop(0, '#ff6666');
+                bodyGradient.addColorStop(1, '#ff2222');
+                ctx.fillStyle = bodyGradient;
+                ctx.fillRect(-20, -20, 40, 40);
+
+                // Arco brillante
+                ctx.shadowColor = '#ffcc00';
+                ctx.shadowBlur = 15;
+                ctx.strokeStyle = '#ffcc00';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(-20, 0, 15, -0.5, 0.5);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            drawMedium() {
+                ctx.save();
+                // Aura mística
+                ctx.shadowColor = '#cc99ff';
+                ctx.shadowBlur = 20;
+                for(let i = 0; i < 3; i++) {
+                    ctx.strokeStyle = `rgba(204, 153, 255, ${1 - i * 0.2})`;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 30 + i * 8 + Math.sin(this.animationFrame) * 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // Vestido con gradiente
+                const dressGradient = ctx.createLinearGradient(0, -25, 0, 20);
+                dressGradient.addColorStop(0, '#9944ff');
+                dressGradient.addColorStop(1, '#7733cc');
+                ctx.fillStyle = dressGradient;
+                ctx.beginPath();
+                ctx.moveTo(0, -25);
+                ctx.quadraticCurveTo(20 + Math.sin(this.animationFrame) * 3, 0, 20, 20);
+                ctx.lineTo(-20, 20);
+                ctx.quadraticCurveTo(-20 - Math.sin(this.animationFrame) * 3, 0, 0, -25);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            drawDetective() {
+                ctx.save();
+                // Gabardina con gradiente
+                const coatGradient = ctx.createLinearGradient(-15, -20, 15, 20);
+                coatGradient.addColorStop(0, '#FFFFFF');
+                coatGradient.addColorStop(1, '#F0F0F0');
+                ctx.fillStyle = coatGradient;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(-15, -20, 30, 40);
+                
+                // Sombrero con textura
+                const hatGradient = ctx.createLinearGradient(-20, -25, 20, -15);
+                hatGradient.addColorStop(0, '#2a9d2a');
+                hatGradient.addColorStop(1, '#228822');
+                ctx.fillStyle = hatGradient;
+                ctx.fillRect(-20, -25, 40, 10);
+                
+                // Orejas con brillo
+                ctx.shadowColor = '#44ff44';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = '#44ff44';
+                [-20, 20].forEach(x => {
+                    ctx.beginPath();
+                    ctx.ellipse(x, -30 + Math.sin(this.animationFrame) * 2, 5, 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                // Lupa con efecto de cristal
+                ctx.shadowBlur = 5;
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(15, 0, 10, 0, Math.PI * 2);
+                ctx.stroke();
+                // Reflejo en la lupa
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(12, -3, 5, 0, Math.PI * 0.8);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            drawExplorer() {
+                ctx.save();
+                // Cuerpo con gradiente
+                const bodyGradient = ctx.createLinearGradient(-15, -20, 15, 20);
+                bodyGradient.addColorStop(0, '#ffff44');
+                bodyGradient.addColorStop(1, '#ffcc00');
+                ctx.fillStyle = bodyGradient;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(-15, -20, 30, 40);
+                
+                // Mochila con textura
+                const backpackGradient = ctx.createLinearGradient(-20, -15, -10, 15);
+                backpackGradient.addColorStop(0, '#cc9933');
+                backpackGradient.addColorStop(1, '#996600');
+                ctx.fillStyle = backpackGradient;
+                ctx.fillRect(-20, -15, 10, 30);
+                
+                // Sombrero con animación
+                ctx.fillStyle = '#996600';
+                ctx.beginPath();
+                ctx.arc(0, -15 + Math.sin(this.animationFrame) * 2, 15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Detalles del sombrero
+                ctx.strokeStyle = '#664400';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, -15 + Math.sin(this.animationFrame) * 2, 10, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            drawOccultist() {
+                ctx.save();
+                // Túnica con gradiente y efecto de movimiento
+                const robeGradient = ctx.createLinearGradient(0, -25, 0, 25);
+                robeGradient.addColorStop(0, '#660066');
+                robeGradient.addColorStop(1, '#440044');
+                ctx.fillStyle = robeGradient;
+                ctx.shadowColor = '#330033';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.moveTo(0, -25);
+                ctx.quadraticCurveTo(25 + Math.sin(this.animationFrame) * 3, 0, 25, 25);
+                ctx.lineTo(-25, 25);
+                ctx.quadraticCurveTo(-25 - Math.sin(this.animationFrame) * 3, 0, 0, -25);
+                ctx.fill();
+
+                // Símbolos mágicos con brillo
+                ctx.shadowColor = '#ff00ff';
+                ctx.shadowBlur = 20;
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 2;
+                for(let i = 0; i < 5; i++) {
+                    let angle = (i * Math.PI * 2 / 5) + this.animationFrame;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(angle) * 15, Math.sin(angle) * 15);
+                    ctx.lineTo(Math.cos(angle + 0.5) * 25, Math.sin(angle + 0.5) * 25);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            drawInventor() {
+                ctx.save();
+                // Cuerpo con gradiente metálico
+                const bodyGradient = ctx.createLinearGradient(-15, -20, 15, 20);
+                bodyGradient.addColorStop(0, '#44ffff');
+                bodyGradient.addColorStop(0.5, '#00cccc');
+                bodyGradient.addColorStop(1, '#44ffff');
+                ctx.fillStyle = bodyGradient;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(-15, -20, 30, 40);
+                
+                // Engranajes giratorios con efecto metálico
+                ctx.shadowColor = '#228888';
+                ctx.shadowBlur = 15;
+                [-15, 15].forEach(x => {
+                    // Engranaje base
+                    ctx.strokeStyle = '#228888';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(x, 0, 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Dientes del engranaje
+                    for(let i = 0; i < 8; i++) {
+                        let angle = this.animationFrame + (i * Math.PI / 4);
+                        ctx.beginPath();
+                        ctx.moveTo(x + Math.cos(angle) * 8, Math.sin(angle) * 8);
+                        ctx.lineTo(x + Math.cos(angle) * 12, Math.sin(angle) * 12);
+                        ctx.stroke();
+                    }
+                    
+                    // Brillo central
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(x - 2, -2, 4, 0, Math.PI * 0.8);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
+
+            update() {
+                // Actualizar animación
+                this.animationFrame += 0.05;
+                if(this.moving) {
+                    this.animationFrame += 0.1;
+                }
+
+                // Actualizar proyectiles
+                this.projectiles = this.projectiles.filter(p => p.isActive());
+                this.projectiles.forEach(p => p.update());
+
+                if (this.invulnerable) {
+                    this.invulnerableTime--;
+                    if (this.invulnerableTime <= 0) {
+                        this.invulnerable = false;
+                    }
+                }
+
+                // Actualizar cooldowns de voz
+                Object.keys(this.voiceCooldowns).forEach(type => {
+                    if (this.voiceCooldowns[type] > 0) {
+                        this.voiceCooldowns[type]--;
+                    }
+                });
+
+                // Actualizar kill streak
+                if (Date.now() - this.lastKillTime > 5000) { // Reset después de 5 segundos
+                    this.killStreak = 0;
+                }
+            }
+
+            shoot(direction) {
+                const projectile = new Projectile(
+                    this.x, 
+                    this.y, 
+                    direction,
+                    this.character
+                );
+                this.projectiles.push(projectile);
+            }
+
+            checkEnemyCollision(enemy) {
+                if (this.invulnerable) return false;
+                
+                const dx = this.x - enemy.x;
+                const dy = this.y - enemy.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < this.size/2 + enemy.size/2) {
+                    this.health -= 10;
+                    this.invulnerable = true;
+                    this.invulnerableTime = 60; // Frames de invulnerabilidad
+                    return true;
+                }
+                return false;
+            }
+
+            playVoiceLine(type) {
+                if (!this.lastVoiceLine || Date.now() - this.lastVoiceLine >= 3000) {
+                    const lines = voiceLines[this.character][type];
+                    const line = lines[Math.floor(Math.random() * lines.length)];
+                    voiceSystem.speak(line, this.character);
+                    this.lastVoiceLine = Date.now();
+                }
+            }
+
+            takeDamage(damage) {
+                if (this.invulnerable) return;
+                
+                this.health -= damage;
+                this.invulnerable = true;
+                this.invulnerableTime = 60;
+
+                // Reproducir línea de daño si no está en cooldown
+                if (this.voiceCooldowns.damage <= 0) {
+                    voiceSystem.speak('damage', this.character);
+                    this.voiceCooldowns.damage = 180; // 3 segundos de cooldown
+                }
+            }
+
+            onEnemyKill() {
+                this.killCount++;
+                this.killStreak++;
+                this.lastKillTime = Date.now();
+
+                // Reproducir línea de eliminación si no está en cooldown
+                if (this.voiceCooldowns.kill <= 0) {
+                    voiceSystem.speak('kill', this.character);
+                    this.voiceCooldowns.kill = 240; // 4 segundos de cooldown
+                }
+
+                // Líneas especiales para racha de eliminaciones
+                if (this.killStreak === 5 && this.voiceCooldowns.special <= 0) {
+                    voiceSystem.speak('killstreak', this.character);
+                    this.voiceCooldowns.special = 300; // 5 segundos de cooldown
+                }
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, direction, character) {
+                this.x = x;
+                this.y = y;
+                this.speed = 7;
+                this.direction = direction;
+                this.size = 10;
+                this.character = character;
+                this.animationFrame = 0;
+            }
+
+            update() {
+                switch(this.direction) {
+                    case 'up': this.y -= this.speed; break;
+                    case 'down': this.y += this.speed; break;
+                    case 'left': this.x -= this.speed; break;
+                    case 'right': this.x += this.speed; break;
+                }
+                this.animationFrame += 0.2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Diferentes proyectiles según el personaje
+                switch(this.character) {
+                    case 0: // Cazador - Flecha
+                        ctx.fillStyle = '#ff4444';
+                        ctx.beginPath();
+                        ctx.moveTo(-10, 0);
+                        ctx.lineTo(10, 0);
+                        ctx.lineTo(5, 5);
+                        ctx.lineTo(5, -5);
+                        ctx.fill();
+                        break;
+
+                    case 1: // Médium - Orbe espiritual
+                        ctx.strokeStyle = '#9944ff';
+                        ctx.lineWidth = 2;
+                        for(let i = 0; i < 3; i++) {
+                            ctx.beginPath();
+                            ctx.arc(0, 0, 5 + i * 3, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                        break;
+
+                    case 2: // Detective - Pista brillante
+                        ctx.fillStyle = '#44ff44';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = '#228822';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                        ctx.stroke();
+                        break;
+
+                    case 3: // Exploradora - Boleadora
+                        ctx.fillStyle = '#ffff44';
+                        ctx.beginPath();
+                        ctx.arc(Math.cos(this.animationFrame) * 5, Math.sin(this.animationFrame) * 5, 4, 0, Math.PI * 2);
+                        ctx.arc(-Math.cos(this.animationFrame) * 5, -Math.sin(this.animationFrame) * 5, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+
+                    case 4: // Ocultista - Energía oscura
+                        ctx.fillStyle = '#660066';
+                        for(let i = 0; i < 4; i++) {
+                            let angle = this.animationFrame + (i * Math.PI / 2);
+                            ctx.beginPath();
+                            ctx.arc(Math.cos(angle) * 5, Math.sin(angle) * 5, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        break;
+
+                    case 5: // Inventora - Engranaje giratorio
+                        ctx.strokeStyle = '#44ffff';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+                        ctx.stroke();
+                        for(let i = 0; i < 6; i++) {
+                            let angle = this.animationFrame + (i * Math.PI / 3);
+                            ctx.beginPath();
+                            ctx.moveTo(Math.cos(angle) * 4, Math.sin(angle) * 4);
+                            ctx.lineTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
+                            ctx.stroke();
+                        }
+                        break;
+                }
+
+                ctx.restore();
+            }
+
+            isActive() {
+                return this.x > 0 && this.x < canvas.width && 
+                       this.y > 0 && this.y < canvas.height;
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.spawn();
+                this.size = 30;
+                this.speed = 2;
+                this.health = 100;
+                this.color = '#FFE4C4'; // Color piel
+            }
+
+            spawn() {
+                // Spawn aleatorio en los bordes del canvas
+                if (Math.random() < 0.5) {
+                    this.x = Math.random() < 0.5 ? 0 : canvas.width;
+                    this.y = Math.random() * canvas.height;
+                } else {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() < 0.5 ? 0 : canvas.height;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Cuerpo principal
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size/2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ojos
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+                ctx.arc(5, -5, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Boca
+                ctx.beginPath();
+                ctx.arc(0, 5, 5, 0, Math.PI);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            update(playerX, playerY) {
+                // Movimiento hacia el jugador
+                const angle = Math.atan2(playerY - this.y, playerX - this.x);
+                this.x += Math.cos(angle) * this.speed;
+                this.y += Math.sin(angle) * this.speed;
+            }
+
+            checkCollision(projectile) {
+                const dx = this.x - projectile.x;
+                const dy = this.y - projectile.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < this.size/2 + projectile.size/2;
+            }
+        }
+
+        class VoiceSystem {
+            constructor() {
+                if ('speechSynthesis' in window) {
+                    this.synth = window.speechSynthesis;
+                    this.initialized = false;
+                    this.initVoices();
+                } else {
+                    console.error('Text-to-speech not supported');
+                }
+
+                this.voiceLines = {
+                    0: { // Hunter
+                        damage: [
+                            "The hunt gets dangerous!",
+                            "Just a scratch!",
+                            "You'll pay for that!"
+                        ],
+                        kill: [
+                            "Another beast falls!",
+                            "The hunt continues!",
+                            "Clean kill!"
+                        ],
+                        killstreak: [
+                            "The hunter becomes the reaper!",
+                            "None escape my sight!"
+                        ]
+                    },
+                    1: { // Medium
+                        damage: [
+                            "The spirits protect me!",
+                            "Your attacks are futile!",
+                            "I've seen worse!"
+                        ],
+                        kill: [
+                            "Return to the void!",
+                            "Your soul is mine!",
+                            "Rest in peace!"
+                        ],
+                        killstreak: [
+                            "The dead walk with me!",
+                            "Witness true power!"
+                        ]
+                    },
+                    2: { // Detective (Female US)
+                        damage: [
+                            "This case just got personal!",
+                            "You're messing with the wrong detective!",
+                            "I've had worse days!"
+                        ],
+                        kill: [
+                            "Case closed!",
+                            "Justice served!",
+                            "Elementary!"
+                        ],
+                        killstreak: [
+                            "All evidence points to your doom!",
+                            "This investigation is heating up!"
+                        ]
+                    },
+                    3: { // Explorer
+                        damage: [
+                            "That's going in my journal!",
+                            "Not my best adventure!",
+                            "I hate mondays!"
+                        ],
+                        kill: [
+                            "Another one for the books!",
+                            "Adventure calls!",
+                            "That belongs in a museum!"
+                        ],
+                        killstreak: [
+                            "Now this is an expedition!",
+                            "Fortune and glory, kid!"
+                        ]
+                    },
+                    4: { // Occultist
+                        damage: [
+                            "Your power is nothing!",
+                            "The void protects!",
+                            "Mere mortal strikes!"
+                        ],
+                        kill: [
+                            "The darkness consumes!",
+                            "By the ancient ones!",
+                            "Your soul is forfeit!"
+                        ],
+                        killstreak: [
+                            "Witness true darkness!",
+                            "The stars align with my victory!"
+                        ]
+                    },
+                    5: { // Inventor
+                        damage: [
+                            "System damage detected!",
+                            "Shields at 50%!",
+                            "Recalibrating defenses!"
+                        ],
+                        kill: [
+                            "Target neutralized!",
+                            "Science wins again!",
+                            "Calculated success!"
+                        ],
+                        killstreak: [
+                            "My finest invention yet!",
+                            "The experiment is a success!"
+                        ]
+                    }
+                };
+            }
+
+            initVoices() {
+                // Esperar a que las voces estén disponibles
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => {
+                        this.setupVoices();
+                    };
+                }
+                this.setupVoices();
+            }
+
+            setupVoices() {
+                const voices = this.synth.getVoices();
+                console.log('Voces disponibles:', voices); // Debug
+
+                // Buscar específicamente voces en inglés americano
+                const americanVoices = voices.filter(voice => 
+                    voice.lang.includes('en-US') || voice.lang.includes('en_US')
+                );
+
+                // Buscar voces femeninas americanas específicas (nombres comunes)
+                const femaleVoice = americanVoices.find(voice => 
+                    voice.name.includes('Samantha') || 
+                    voice.name.includes('Female') ||
+                    voice.name.includes('Google US English Female') ||
+                    voice.name.includes('Microsoft Zira')
+                ) || americanVoices[0];
+
+                // Asignar la voz femenina americana a la Detective
+                this.voices = {
+                    0: voices.find(v => v.lang === 'en-GB') || voices[0],
+                    1: americanVoices[0] || voices[0],
+                    2: femaleVoice, // Detective - Forzar voz femenina americana
+                    3: americanVoices[0] || voices[0],
+                    4: voices.find(v => v.lang === 'en-GB') || voices[0],
+                    5: americanVoices[0] || voices[0]
+                };
+
+                this.initialized = true;
+                
+                // Debug - mostrar la voz seleccionada para la Detective
+                console.log('Voz seleccionada para Detective:', femaleVoice);
+            }
+
+            speak(type, character) {
+                if (!this.initialized || this.synth.speaking) return;
+
+                const lines = this.voiceLines[character][type];
+                if (!lines) return;
+
+                const line = lines[Math.floor(Math.random() * lines.length)];
+                const utterance = new SpeechSynthesisUtterance(line);
+                
+                // Configuración de voz según el personaje
+                utterance.voice = this.voices[character];
+                utterance.pitch = this.getCharacterPitch(character);
+                utterance.rate = 1.0;
+                utterance.volume = 1.0;
+                utterance.lang = character === 2 ? 'en-US' : 'en-GB';
+
+                try {
+                    this.synth.speak(utterance);
+                    console.log(`${character} says: ${line}`);
+                } catch (error) {
+                    console.error('Voice error:', error);
+                }
+            }
+
+            getCharacterPitch(character) {
+                const pitches = {
+                    0: 0.8,  // Hunter
+                    1: 1.2,  // Medium
+                    2: 1.3,  // Detective (Female)
+                    3: 1.1,  // Explorer
+                    4: 0.7,  // Occultist
+                    5: 1.3   // Inventor
+                };
+                return pitches[character] || 1.0;
+            }
+        }
+
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Asegurarnos que el canvas ocupe toda la pantalla
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                // Inicializar elementos del fondo
+                this.backgroundTiles = this.createBackgroundTiles();
+                this.rocks = this.createRocks();
+            }
+
+            createBackgroundTiles() {
+                const tileSize = 64;
+                const tiles = [];
+                
+                for (let x = 0; x < this.canvas.width; x += tileSize) {
+                    for (let y = 0; y < this.canvas.height; y += tileSize) {
+                        tiles.push({
+                            x: x,
+                            y: y,
+                            color: this.getRandomGroundColor(),
+                            details: this.generateTileDetails(tileSize)
+                        });
+                    }
+                }
+                return tiles;
+            }
+
+            getRandomGroundColor() {
+                const colors = [
+                    '#8B4513', // Marrón tierra
+                    '#8B5A2B', // Marrón más claro
+                    '#654321', // Marrón más oscuro
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            generateTileDetails(size) {
+                const details = [];
+                const numDetails = 3 + Math.random() * 4;
+                
+                for (let i = 0; i < numDetails; i++) {
+                    details.push({
+                        x: Math.random() * size,
+                        y: Math.random() * size,
+                        size: 2 + Math.random() * 4,
+                        color: `rgba(0, 0, 0, ${0.1 + Math.random() * 0.2})`
+                    });
+                }
+                return details;
+            }
+
+            createRocks() {
+                const rocks = [];
+                const numRocks = 30;
+                
+                for (let i = 0; i < numRocks; i++) {
+                    rocks.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        size: 20 + Math.random() * 30,
+                        rotation: Math.random() * Math.PI * 2,
+                        type: Math.floor(Math.random() * 3),
+                        color: this.getRandomRockColor()
+                    });
+                }
+                return rocks;
+            }
+
+            getRandomRockColor() {
+                const colors = [
+                    '#808080', // Gris
+                    '#696969', // Gris oscuro
+                    '#A9A9A9', // Gris claro
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            drawBackground() {
+                // Dibujar tiles de tierra
+                this.backgroundTiles.forEach(tile => {
+                    this.ctx.fillStyle = tile.color;
+                    this.ctx.fillRect(tile.x, tile.y, 64, 64);
+                    
+                    // Dibujar detalles en cada tile
+                    tile.details.forEach(detail => {
+                        this.ctx.fillStyle = detail.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(
+                            tile.x + detail.x,
+                            tile.y + detail.y,
+                            detail.size,
+                            0,
+                            Math.PI * 2
+                        );
+                        this.ctx.fill();
+                    });
+                });
+
+                // Dibujar rocas
+                this.rocks.forEach(rock => {
+                    this.ctx.save();
+                    this.ctx.translate(rock.x, rock.y);
+                    this.ctx.rotate(rock.rotation);
+                    
+                    // Sombra para todas las rocas
+                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowOffsetX = 5;
+                    this.ctx.shadowOffsetY = 5;
+
+                    this.ctx.fillStyle = rock.color;
+
+                    switch(rock.type) {
+                        case 0: // Roca circular
+                            this.ctx.beginPath();
+                            this.ctx.arc(0, 0, rock.size/2, 0, Math.PI * 2);
+                            this.ctx.fill();
+                            break;
+                            
+                        case 1: // Roca poligonal
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(-rock.size/2, -rock.size/2);
+                            this.ctx.lineTo(rock.size/2, -rock.size/3);
+                            this.ctx.lineTo(rock.size/2, rock.size/2);
+                            this.ctx.lineTo(-rock.size/3, rock.size/3);
+                            this.ctx.closePath();
+                            this.ctx.fill();
+                            break;
+                            
+                        case 2: // Roca irregular
+                            this.ctx.beginPath();
+                            for(let i = 0; i < 6; i++) {
+                                const angle = (i / 6) * Math.PI * 2;
+                                const radius = rock.size/2 * (0.7 + Math.random() * 0.3);
+                                const x = Math.cos(angle) * radius;
+                                const y = Math.sin(angle) * radius;
+                                i === 0 ? this.ctx.moveTo(x, y) : this.ctx.lineTo(x, y);
+                            }
+                            this.ctx.closePath();
+                            this.ctx.fill();
+                            break;
+                    }
+                    
+                    this.ctx.restore();
+                });
+            }
+
+            update() {
+                // Limpiar el canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Dibujar el fondo primero
+                this.drawBackground();
+                
+                // Aquí continuaría el resto de la lógica del juego
+                // ...
+            }
+        }
+
+        // Inicializar el sistema
+        const voiceSystem = new VoiceSystem();
+
+        // Configuración del juego
+        const selectedCharacter = parseInt(localStorage.getItem('selectedCharacter')) || 0;
+        const player = new Player(selectedCharacter);
+        const keys = {};
+
+        // Control de teclas
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        const enemies = [];
+        let gameOver = false;
+        let score = 0;
+
+        function spawnEnemy() {
+            if (enemies.length < 10) { // Máximo 10 enemigos a la vez
+                enemies.push(new Enemy());
+            }
+        }
+
+        // Loop principal del juego
+        function gameLoop() {
+            if (gameOver) {
+                ctx.fillStyle = '#000000';
+                ctx.font = '48px Arial';
+                ctx.fillText('Game Over - Score: ' + score, canvas.width/2 - 150, canvas.height/2);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Spawn de enemigos
+            if (Math.random() < 0.02) { // 2% de probabilidad cada frame
+                spawnEnemy();
+            }
+
+            // Actualizar y dibujar enemigos
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                enemy.update(player.x, player.y);
+                enemy.draw();
+
+                // Comprobar colisiones con proyectiles
+                for (let j = player.projectiles.length - 1; j >= 0; j--) {
+                    if (enemy.checkCollision(player.projectiles[j])) {
+                        enemies.splice(i, 1);
+                        player.projectiles.splice(j, 1);
+                        score += 100;
+                        break;
+                    }
+                }
+
+                // Comprobar colisión con jugador
+                if (player.checkEnemyCollision(enemy)) {
+                    if (player.health <= 0) {
+                        gameOver = true;
+                    }
+                }
+            }
+
+            // Dibujar HUD
+            ctx.fillStyle = '#000000';
+            ctx.font = '20px Arial';
+            ctx.fillText('Salud: ' + player.health, 10, 30);
+            ctx.fillText('Puntuación: ' + score, 10, 60);
+
+            // Movimiento del jugador
+            player.moving = false;
+            if (keys['w'] && player.y > player.size/2) {
+                player.y -= player.speed;
+                player.direction = 'up';
+                player.moving = true;
+            }
+            if (keys['s'] && player.y < canvas.height - player.size/2) {
+                player.y += player.speed;
+                player.direction = 'down';
+                player.moving = true;
+            }
+            if (keys['a'] && player.x > player.size/2) {
+                player.x -= player.speed;
+                player.direction = 'left';
+                player.moving = true;
+            }
+            if (keys['d'] && player.x < canvas.width - player.size/2) {
+                player.x += player.speed;
+                player.direction = 'right';
+                player.moving = true;
+            }
+
+            // Disparos
+            if (keys['ArrowUp']) player.shoot('up');
+            if (keys['ArrowDown']) player.shoot('down');
+            if (keys['ArrowLeft']) player.shoot('left');
+            if (keys['ArrowRight']) player.shoot('right');
+
+            // Actualizar y dibujar
+            player.update();
+            player.draw();
+            player.projectiles.forEach(p => p.draw());
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        document.getElementById('enableAudio').addEventListener('click', function() {
+            voiceSystem.synth.cancel(); // Limpiar cola de voces
+            voiceSystem.playVoiceLine(player.character, 'special'); // Test inicial
+            this.style.display = 'none'; // Ocultar botón
+        });
+    </script>
+</body>
+</html> 

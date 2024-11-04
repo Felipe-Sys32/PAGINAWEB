@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot IA Futurista</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            width: 400px;
+            height: 600px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+
+        .settings-panel {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        .bot {
+            background: rgba(0, 255, 255, 0.1);
+            margin-right: auto;
+        }
+
+        .user {
+            background: rgba(0, 255, 0, 0.1);
+            margin-left: auto;
+        }
+
+        .chat-input {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input, button, select {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        input {
+            flex: 1;
+        }
+
+        button {
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .glow {
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #0ff;
+            }
+            to {
+                box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #0ff;
+            }
+        }
+
+        /* Pantalla de selección */
+        .selection-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .personality-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 800px;
+        }
+
+        .personality-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            color: white;
+        }
+
+        .personality-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .personality-card img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+
+        /* Efectos visuales para el chat */
+        .message {
+            animation: fadeIn 0.5s ease-in-out;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Indicador de escritura */
+        .typing-indicator {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1s infinite;
+        }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="selection-screen" id="selectionScreen">
+        <h1 style="color: white; margin-bottom: 30px;">Selecciona la Personalidad del Chatbot</h1>
+        <div class="personality-grid">
+            <div class="personality-card" onclick="selectPersonality('científico')">
+                <img src="scientist-icon.png" alt="Científico">
+                <h3>Científico</h3>
+                <p>Respuestas basadas en datos y ciencia</p>
+            </div>
+            <div class="personality-card" onclick="selectPersonality('amigable')">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="Amigable">
+                <h3>Amigable</h3>
+                <p>Un compañero cercano y empático</p>
+            </div>
+            <div class="personality-card" onclick="selectPersonality('profesional')">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png" alt="Profesional">
+                <h3>Profesional</h3>
+                <p>Formal y eficiente en sus respuestas</p>
+            </div>
+            <div class="personality-card" onclick="selectPersonality('gracioso')">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Gracioso">
+                <h3>Gracioso</h3>
+                <p>Respuestas divertidas y ocurrentes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container" style="display: none;" id="chatContainer">
+        <div class="chat-header glow">
+            <h2 style="color: white;">Chatbot IA</h2>
+        </div>
+        <div class="settings-panel">
+            <select id="personality" onchange="changePersonality()">
+                <option value="amigable">Amigable</option>
+                <option value="profesional">Profesional</option>
+                <option value="gracioso">Gracioso</option>
+            </select>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <button class="voice-btn" onclick="toggleVoiceInput()">🎤</button>
+            <input type="text" id="userInput" placeholder="Escribe tu mensaje...">
+            <button onclick="toggleEmojiPicker()">😊</button>
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        let botPersonality = 'amigable';
+
+        function selectPersonality(type) {
+            botPersonality = type;
+            document.getElementById('selectionScreen').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+            document.getElementById('personality').value = type;
+            addBotMessage(getGreetingByPersonality());
+        }
+
+        function changePersonality() {
+            botPersonality = document.getElementById('personality').value;
+            addBotMessage(getGreetingByPersonality());
+        }
+
+        function getGreetingByPersonality() {
+            switch(botPersonality) {
+                case 'científico':
+                    return 'Saludos. Listo para analizar datos y resolver consultas científicas.';
+                case 'amigable':
+                    return '¡Hola! Estoy aquí para ayudarte con una sonrisa 😊';
+                case 'profesional':
+                    return 'Saludos. ¿En qué puedo asistirle hoy?';
+                case 'gracioso':
+                    return '¡Hey! ¿Qué tal? ¿Listo para chatear con el bot más divertido? 😎';
+                default:
+                    return '¡Hola! ¿En qué puedo ayudarte?';
+            }
+        }
+
+        function addBotMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addUserMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            
+            if (message) {
+                addUserMessage(message);
+                userInput.value = '';
+                
+                setTimeout(() => {
+                    let response = '';
+                    switch(botPersonality) {
+                        case 'científico':
+                            response = `Analizando tu consulta desde una perspectiva científica...`;
+                            break;
+                        case 'amigable':
+                            response = `¡Claro! Me encanta ayudar. ${message.includes('?') ? 'Déjame pensar en eso...' : 'Gracias por compartir eso conmigo.'}`;
+                            break;
+                        case 'profesional':
+                            response = `Entiendo su consulta. ${message.includes('?') ? 'Procesando su solicitud...' : 'Tomaré nota de esa información.'}`;
+                            break;
+                        case 'gracioso':
+                            response = `¡Wow! ${message.includes('?') ? '¡Esa pregunta está más complicada que un rubik en la oscuridad! 😅' : '¡Eso suena más divertido que un mono en patines! 🐒'}`;
+                            break;
+                        default:
+                            response = 'Entiendo, continúa por favor...';
+                    }
+                    addBotMessage(response);
+                }, 1000);
+            }
+        }
+
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

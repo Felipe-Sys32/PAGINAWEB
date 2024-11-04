@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sir Fries and Sausage Games</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            padding: 20px;
+            background-image: linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        h1 {
+            text-shadow: 3px 3px #ff0000;
+            font-size: 2.5em;
+            margin-bottom: 50px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .game-box {
+            border: 3px solid #00ff00;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .game-box:hover {
+            transform: scale(1.05);
+            background-color: #003300;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #00ff00;
+            }
+            to {
+                text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00ff00;
+            }
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    </style>
+</head>
+<body>
+    <h1>Juegos Sir Fries and Sausage</h1>
+    
+    <div class="grid-container">
+        <a href="Chatbot.html" class="game-box">
+            <h2>SirGPT</h2>
+            <p>¡Habla con una IA!</p>
+        </a>
+        <a href="LobbyRpg.html" class="game-box">
+            <h2>The 6 last warriors</h2>
+            <p>¡Juego de aventura al estilo RPG!</p>
+        </a>
+        <a href="JUEGORUNNER.HTML" class="game-box">
+            <h2>El juego un hombre que corre como un loco</h2>
+            <p>¡Juego al estilo Runner!</p>
+        </a>
+       
+        <p style="height: 3em; color: #ff0000; text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 15px #ff0000; text-align: center; font-size: 24px;">
+            ATENCION! EL JUEGO THE 6 LAST WARRIORS ES SOLO PARA PC!
+        </p>
+
+
+        
+    </div>
+</body>
+</html>
